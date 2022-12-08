@@ -1,4 +1,4 @@
-from sklearn.preprocessing import train_test_split
+from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.metrics import accuracy_score
 
@@ -28,3 +28,26 @@ def expected_calibration_error(y_true, y_pred, num_bins=15):
             o += np.abs(np.sum(correct[mask] - prob_y[mask]))
 
     return o / y_pred.shape[0], accuracy_score(y_true, pred_y)
+
+def ause(pred_probs, pred_variances, true_labels):
+    num_pred = pred_probs.shape[0]
+    error_res = (true_labels - pred_probs)**2
+    idx_res = np.argsort(error_res)
+    idx_var = np.argsort(pred_variances)
+    fractions = list(np.arange(start=0.,stop=1.,step=0.01))
+    var_rmses, error_rmses = [], []
+    for step, fraction in enumerate(fractions):
+        if int((1.-fraction)*num_pred) == 0:
+            var_rmses.append(0)
+            error_rmses.append(0)
+            continue
+        var_rmse = np.sqrt(np.mean(error_res[idx_var[0:int((1.-fraction)*num_pred)]]))
+        var_rmses.append(var_rmse)
+        
+        error_rmse = np.sqrt(np.mean(error_res[idx_res[0:int((1.-fraction)*num_pred)]]))
+        error_rmses.append(error_rmse)
+    error_rmses_normalized = error_rmses/error_rmses[0]
+    var_rmses_normalized = var_rmses/var_rmses[0]
+    sparsification_errors = var_rmses_normalized - error_rmses_normalized
+    ause = np.trapz(y=sparsification_errors, x=fractions)
+    return ause, sparsification_errors, error_rmses_normalized, var_rmses_normalized, fractions
