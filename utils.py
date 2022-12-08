@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 def return_replicates(x, y):
     "Stratified sampling followed by 2 sets of train and test datasets"
@@ -9,7 +10,7 @@ def return_replicates(x, y):
     x1_train, x1_test, y1_train, y1_test = train_test_split(x1, y1, test_size=0.25, stratify=y1)
     x2_train, x2_test, y2_train, y2_test = train_test_split(x2, y2, test_size=0.25, stratify=y2)
     
-    return  x1_train, x1_test, y1_train, y1_test, x2_train, x2_test, y2_train, y2_test 
+    return  ((x1_train, x1_test, y1_train, y1_test), (x2_train, x2_test, y2_train, y2_test)) 
                                                        
 
 def expected_calibration_error(y_true, y_pred, num_bins=15):
@@ -51,3 +52,27 @@ def ause(pred_probs, pred_variances, true_labels):
     sparsification_errors = var_rmses_normalized - error_rmses_normalized
     ause = np.trapz(y=sparsification_errors, x=fractions)
     return ause, sparsification_errors, error_rmses_normalized, var_rmses_normalized, fractions
+
+def permutation_test_ause(pred_probs, pred_variances, pred_labels, n_runs=200):
+    pred_ause, sparsification_errors, error_rmse, var_rmse, fractions = ause(pred_probs, pred_variances, pred_labels)
+    perm_auses = []
+    perm_variance_rmses = []
+    for i in range(n_runs):
+        perm_variances = np.random.permutation(pred_variances)
+        perm_ause, perm_sparsification_errors, perm_error_rmse, perm_variance_rmse, _ = ause(pred_probs, perm_variances, pred_labels)
+        perm_variance_rmses.append(perm_variance_rmse)
+        perm_auses.append(perm_ause)
+    perm_variance_rmses = np.array(perm_variance_rmses)
+    variance_rmse_max = np.max(perm_variance_rmses, axis=0) 
+    variance_rmse_min = np.min(perm_variance_rmses, axis=0)
+    count = np.sum(perm_auses > pred_ause)
+    p = (1 - count/n_runs)
+    plt.plot(fractions, error_rmse, label="Error residuals")
+    plt.plot(fractions, var_rmse, label="Variance residuals")
+    plt.fill_between(fractions, variance_rmse_max, variance_rmse_min, facecolor='gray', alpha=0.5)
+    plt.xlabel("Fraction of samples removed")
+    plt.ylabel("Normalized error MSE")
+    plt.title(f"AUSE: {pred_ause:0.03f}, p-value: {p:0.03f}, runs: {n_runs}")
+    plt.legend()
+    plt.show()
+    return
