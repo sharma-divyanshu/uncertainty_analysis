@@ -30,7 +30,7 @@ def expected_calibration_error(y_true, y_pred, num_bins=15):
         if np.any(mask):
             o += np.abs(np.sum(correct[mask] - prob_y[mask]))
 
-    return o / y_pred.shape[0], accuracy_score(y_true, pred_y)
+    return o / y_pred.shape[0]
 
 def ause(pred_probs, pred_variances, true_labels):
     num_pred = pred_probs.shape[0]
