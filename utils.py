@@ -3,12 +3,14 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
+
 def return_replicates(x, y):
     "Stratified sampling followed by 2 sets of train and test datasets"
-    x1, x2, y1, y2 = train_test_split(x, y, test_size=0.5, stratify=y)
+    random_state = 7200
+    x1, x2, y1, y2 = train_test_split(x, y, test_size=0.5, stratify=y, random_state=random_state)
     
-    x1_train, x1_test, y1_train, y1_test = train_test_split(x1, y1, test_size=0.25, stratify=y1)
-    x2_train, x2_test, y2_train, y2_test = train_test_split(x2, y2, test_size=0.25, stratify=y2)
+    x1_train, x1_test, y1_train, y1_test = train_test_split(x1, y1, test_size=0.25, stratify=y1, random_state=random_state)
+    x2_train, x2_test, y2_train, y2_test = train_test_split(x2, y2, test_size=0.25, stratify=y2, random_state=random_state)
     
     return  ((x1_train, x1_test, y1_train, y1_test), (x2_train, x2_test, y2_train, y2_test)) 
                                                        
@@ -75,4 +77,3 @@ def permutation_test_ause(pred_probs, pred_variances, pred_labels, n_runs=200):
     plt.title(f"AUSE: {pred_ause:0.03f}, p-value: {p:0.03f}, runs: {n_runs}")
     plt.legend()
     plt.show()
-    return
