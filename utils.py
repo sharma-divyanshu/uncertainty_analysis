@@ -55,13 +55,13 @@ def ause(pred_probs, pred_variances, true_labels):
     ause = np.trapz(y=sparsification_errors, x=fractions)
     return ause, sparsification_errors, error_rmses_normalized, var_rmses_normalized, fractions
 
-def permutation_test_ause(pred_probs, pred_variances, pred_labels, n_runs=200):
-    pred_ause, sparsification_errors, error_rmse, var_rmse, fractions = ause(pred_probs, pred_variances, pred_labels)
+def permutation_test_ause(pred_probs, pred_variances, true_labels, n_runs=200):
+    pred_ause, sparsification_errors, error_rmse, var_rmse, fractions = ause(pred_probs, pred_variances, true_labels)
     perm_auses = []
     perm_variance_rmses = []
     for i in range(n_runs):
         perm_variances = np.random.permutation(pred_variances)
-        perm_ause, perm_sparsification_errors, perm_error_rmse, perm_variance_rmse, _ = ause(pred_probs, perm_variances, pred_labels)
+        perm_ause, perm_sparsification_errors, perm_error_rmse, perm_variance_rmse, _ = ause(pred_probs, perm_variances, true_labels)
         perm_variance_rmses.append(perm_variance_rmse)
         perm_auses.append(perm_ause)
     perm_variance_rmses = np.array(perm_variance_rmses)
